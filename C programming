@@ -1,1 +1,50 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+void decode_url(char *src, char *dest) {
+    char *p = src;
+    char code[3] = {0};
+    while (*p) {
+        if (*p == '+') {
+            *dest = ' ';
+        } else if (*p == '%' && *(p + 1) && *(p + 2)) {
+            strncpy(code, p + 1, 2);
+            *dest = (char)strtol(code, NULL, 16);
+            p += 2;
+        } else {
+            *dest = *p;
+        }
+        dest++;
+        p++;
+    }
+    *dest = '\0';
+}
+
+int main() {
+    printf("Content-type: text/html\n\n");
+    
+    char *data = getenv("QUERY_STRING");
+    if (data == NULL) {
+        printf("<html><body>Error: No data received.</body></html>");
+        return 1;
+    }
+
+    char name[100], email[100], reason[200];
+    sscanf(data, "name=%99[^&]&email=%99[^&]&reason=%199[^&]", name, email, reason);
+
+    char decoded_name[100], decoded_email[100], decoded_reason[200];
+    decode_url(name, decoded_name);
+    decode_url(email, decoded_email);
+    decode_url(reason, decoded_reason);
+
+    printf("<html><body>");
+    printf("<h2>Appointment Confirmation</h2>");
+    printf("<p>Name: %s</p>", decoded_name);
+    printf("<p>Email: %s</p>", decoded_email);
+    printf("<p>Reason: %s</p>", decoded_reason);
+    printf("</body></html>");
+
+    return 0;
+}
+    
